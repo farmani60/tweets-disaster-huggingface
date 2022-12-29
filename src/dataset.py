@@ -1,5 +1,4 @@
 import matplotlib
-import pandas as pd
 from datasets import Dataset, DatasetDict
 from sklearn import model_selection
 
@@ -26,16 +25,13 @@ def make_data(df):
     return dataset
 
 
-if __name__ == "__main__":
-    df = pd.read_csv(config.TRAIN_SET_PATH, index_col=False)
-    df_test = pd.read_csv(config.TEST_SET_PATH)
-
-    dataset = make_data(df)
-    train_ds = dataset["train"]
-    valid_ds = dataset["validation"]
-
+def plot_avg_tweets_length(df):
     df["words_per_tweet"] = df["text"].str.split().apply(len)
     df.boxplot("words_per_tweet", by="target", grid=False, showfliers=False, color="black")
     plt.suptitle("")
     plt.xlabel("")
     plt.show()
+
+
+def tokenize(batch):
+    return config.TOKENIZER(batch[config.TEXT], padding=True, truncation=True)
