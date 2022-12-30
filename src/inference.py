@@ -7,9 +7,8 @@ from src import config
 from src.dataset import tokenize
 
 
-def predict(dataset, trainer):
-    test_tweets_encoded = dataset.map(tokenize, batched=True, batch_size=None)
-    preds = trainer.predict(test_tweets_encoded["test"])
+def predict(tweets_encoded, trainer):
+    preds = trainer.predict(tweets_encoded["test"])
     y_pres = np.argmax(preds.predictions, axis=1)
     sample_submission = pd.read_csv(config.SUBMISSION_PATH)
     sample_submission["target"] = y_pres

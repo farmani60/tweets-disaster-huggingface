@@ -14,12 +14,9 @@ from src.inference import predict
 from src.metrics import compute_metrics
 
 
-def train(dataset):
+def train(tweets_encoded):
     # define device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # encode tweets
-    tweets_encoded = dataset.map(tokenize, batched=True, batch_size=None)
 
     # make model
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -83,8 +80,11 @@ if __name__ == "__main__":
     # create huggingface dataset
     dataset = make_data(df_train, df_test)
 
+    # encode tweets
+    tweets_encoded = dataset.map(tokenize, batched=True, batch_size=None)
+
     # train the model
-    trainer = train(dataset)
+    trainer = train(tweets_encoded)
 
     # predict test set
-    predictions = predict(dataset, trainer)
+    predictions = predict(tweets_encoded, trainer)
