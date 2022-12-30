@@ -1,10 +1,6 @@
 import pandas as pd
 import torch
-from transformers import (
-    AutoModelForAudioFrameClassification,
-    Trainer,
-    TrainingArguments,
-)
+from transformers import AutoModelForSequenceClassification, Trainer, TrainingArguments
 
 from src import config
 from src.dataset import make_data, plot_avg_tweets_length, tokenize
@@ -19,7 +15,7 @@ def train(dataset):
     tweets_encoded = dataset.map(tokenize, batched=True, batch_size=None)
 
     # make model
-    model = AutoModelForAudioFrameClassification.from_pretrained(
+    model = AutoModelForSequenceClassification.from_pretrained(
         config.MODEL_CHECKPOINT, num_labels=config.NUM_LABELS
     ).to(device)
 
@@ -32,6 +28,7 @@ def train(dataset):
         per_device_train_batch_size=config.TRAIN_BATCH_SIZE,
         per_device_eval_batch_size=config.VALID_BATCH_SIZE,
         weight_decay=config.WEIGHT_DECAY,
+        do_eval=True,
         evaluation_strategy=config.EVALUATION_STRATEGY,
         disable_tqdm=False,
         logging_steps=logging_steps,
@@ -44,20 +41,20 @@ def train(dataset):
         args=training_args,
         compute_metrics=compute_metrics,
         train_dataset=tweets_encoded["train"],
-        eval_dataset=tweets_encoded["valid"],
+        eval_dataset=tweets_encoded["validation"],
         tokenizer=config.TOKENIZER,
     )
 
     trainer.train()
 
+    return trainer
+
 
 if __name__ == "__main__":
-    df = pd.read_csv(config.TRAIN_SET_PATH, index_col=False)
+    df_train = pd.read_csv(config.TRAIN_SET_PATH, index_col=False)
     # plot_avg_tweets_length(df)
-    df_test = pd.read_csv(config.TEST_SET_PATH)
+    df_test = pd.read_csv(config.TEST_SET_PATH, index_col=False)
 
-    dataset = make_data(df)
-    train_ds = dataset["train"]
-    valid_ds = dataset["validation"]
+    dataset = make_data(df_train, df_test)
 
-    train(train_ds, valid_ds, device="cpu")
+    trainer = train(dataset)
