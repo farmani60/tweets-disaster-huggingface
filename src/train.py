@@ -3,6 +3,12 @@ import torch
 from transformers import AutoModelForSequenceClassification, Trainer, TrainingArguments
 
 from src import config
+from src.data_cleaning import (
+    clean,
+    convert_abbrev_in_text,
+    relabel_targets,
+    remove_repetition_subtext_in_df,
+)
 from src.dataset import make_data, plot_avg_tweets_length, tokenize
 from src.inference import predict
 from src.metrics import compute_metrics
@@ -56,7 +62,29 @@ if __name__ == "__main__":
     # plot_avg_tweets_length(df)
     df_test = pd.read_csv(config.TEST_SET_PATH, index_col=False)
 
+    # fill nan values
+    df_train["keyword"] = df_train["keyword"].fillna("no_keyword")
+
+    # remove repetition sub texts
+    df_train = remove_repetition_subtext_in_df(df_train)
+    df_test = remove_repetition_subtext_in_df(df_test)
+
+    # clean tweets
+    df_train[config.TEXT] = df_train[config.TEXT].apply(lambda x: clean(x))
+    df_test[config.TEXT] = df_test[config.TEXT].apply(lambda x: clean(x))
+
+    # convert abbreviations
+    df_train[config.TEXT] = df_train[config.TEXT].apply(lambda x: convert_abbrev_in_text(x))
+    df_test[config.TEXT] = df_test[config.TEXT].apply(lambda x: convert_abbrev_in_text(x))
+
+    # fix wrong targets
+    df_train = relabel_targets(df_train)
+
+    # create huggingface dataset
     dataset = make_data(df_train, df_test)
 
+    # train the model
     trainer = train(dataset)
+
+    # predict test set
     predictions = predict(dataset, trainer)
