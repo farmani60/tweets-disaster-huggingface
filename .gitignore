@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 
 .idea/
+
+# python formatting files
+.pre-commit-config.yaml
+pyproject.toml
