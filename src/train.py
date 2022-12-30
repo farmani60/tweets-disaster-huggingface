@@ -4,6 +4,7 @@ from transformers import AutoModelForSequenceClassification, Trainer, TrainingAr
 
 from src import config
 from src.dataset import make_data, plot_avg_tweets_length, tokenize
+from src.inference import predict
 from src.metrics import compute_metrics
 
 
@@ -58,3 +59,4 @@ if __name__ == "__main__":
     dataset = make_data(df_train, df_test)
 
     trainer = train(dataset)
+    predictions = predict(dataset, trainer)
